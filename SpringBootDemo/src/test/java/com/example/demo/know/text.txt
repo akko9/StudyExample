@@ -1,0 +1,134 @@
+1.@Configuration
+    1.设置该类为配置类
+    2.该类也是组件
+    3.@Configuration+@Bean 实现组件注册
+    4.proxyBeanMethod 代理bean的方法
+        true   在config类中注册的方法在外边调用都会去从容器里寻找  FUll
+               组件之间有依赖关系，方法调用会获得单例组件,则可以使用
+        false  在config类中注册的方法在外边调用都会产生新的对象  lite
+                组件之间无依赖关系则可以使用
+2.@Import
+    给容器中自动创建class组件，默认组件名字为全类名
+3.Conditional(注意依赖顺序问题)
+    满足Conditional条件,则进行组件注册
+    加在方法上:满足条件,方法生效
+    加载类上:满足条件,类下方法才生效
+4.ImportReSource 导入spring配置文件
+    ImportReSource("classpath:*.xml")
+5.配置绑定:只有在容器中的组件才能拥有spring其他组件功能
+    1.@Component
+      @ConfigurationProperties(prefix = "mycar") 指定前缀
+        properties文件中:mycar.name
+    2.@ConfigurationProperties(prefix = "mycar")
+    MyConfig中配置: @EnableConfigurationProperties(Car.class)
+    在配置类开启绑定功能,把Car自动注册到容器中,(主要是引用第三方包,第三方包里不一定有@Component
+6.Springboot自动配置分析(开始将组件全部加载,但装配按照条件装配(@Conditional)
+    1.@SpringBootConfiguration 本身也是个配置类
+        @Configuration
+    2.@EnableAutoConfiguration
+        @AutoConfigurationPackage 给容器导入组件
+            1.@Import(AutoConfigurationPackages.Registrar.class) 利用Registrar.class给容器导入一系列组件
+            2.register(registry, new PackageImports(metadata).getPackageNames().toArray(new String[0]));
+            该方法就是将指定包下的组件注册到容器中
+            3.new PackageImports(metadata).getPackageNames() 该为扫描到的包 main所在的包下
+        @Import(AutoConfigurationImportSelector.class)
+            1.getAutoConfigurationEntry(annotationMetadata); 给容器中批量导入组件
+                1.getCandidateConfigurations(annotationMetadata, attributes)
+                    1.SpringFactoriesLoader.loadFactoryNames 利用工厂加载
+                        1.loadSpringFactories(ClassLoader classLoader)得到所有组件
+                            1."META-INF/spring.factories";
+                               spring-boot-autoconfigure-2.4.1.jar从该位置加载文件
+                               springboot一启动就要加载127个自动配置组件
+    3.@ComponentScan
+        指定扫描哪些
+7.debug=true : negative 不生效 /positive  生效
+8.自定义属性与properties绑定
+ <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <scope>true</scope>
+ </dependency>
+ 生产打包时:无需添加 需在pom.xml 进行一个配置<configuration>
+9.静态资源
+    1.位置static|resources|public|META-INF/resources
+            为了拦截器方便:spring.mvc.static-path-pattern=/res/**
+            修改静态资源路径:spring.web.resources.static-locations=classpath:/文件夹路径/
+    2.如果静态资源与请求名相同:先去执行请求,不能处理则去找静态资源
+    3.静态资源配置原理
+        WebMvcAutoConfiguration
+            1.WebMvcAutoConfigurationAdapter
+                1.ResourceProperties 获取核spring.resources绑定的所有参数
+                2.webProperties 获取核spring.mvc绑定的所有参数
+                3.beanFactory spring的bean工厂
+                4.messageConvertersProvider 找到所有的httpMessageConverters
+                5.resourceHandlerRegistrationCustomizer 找到资源处理器的自定义器
+                6.dispatcherServletPath 处理路径
+                7.servletRegistrations 应用注册Servlet、filter
+            2.addResourceHandlers 资源处理默认规则
+                1.this.resourceProperties.isAddMappings()
+                 设置 spring.web.resources.add-mappings=false 禁用所有静态资源规则
+                2.registry.hasMappingForPattern("/webjars/**") 策略一
+                3.registry.hasMappingForPattern(staticPathPattern) 策略二
+            3.WelcomePageHandlerMapping 欢迎页处理规则
+10.请求处理
+    Rest原理:
+        1.表单提交,会带上"_method"
+            properties设置:spring.mvc.hiddenmethod.filter.enabled=true
+        2.表单会通过HiddenHttpMethodFilter过滤器进行处理
+            1.判断是否为post提交
+            2.处理_method
+            3.过滤器放行的对象是httpWrapper 是httpServletRequest的包装类(重写了getMethod)
+        3.FrameworkServlet重写了doGet/doPost方法
+             processRequest(request, response);
+              dispatcherServlet  doService(request, response);
+                doDispatch 每个请求都会调用该方法
+                    getHandler 找到当前请求使用哪个方法处理
+                        handlerMappings   handler映射集合
+                        {
+                        1.RequestMappingHandlerMapping 保存了所有@RequestMapping 和handler的映射规则
+                        2.welcomePageHandlerMapping 欢迎页Mapping 和handler的映射规则
+                        3.
+                        }
+11.常用注解
+    @RequestAttribute() =HttpServletRequest获取请求域中的参数
+    @MatrixVariable 矩阵变量 cookie禁用可以用
+        {path;low=34;brand=aa,bb,cc;}
+        //Springboot默认禁用 手动开启UrlPathHelper
+            removeSemicolonContent 默认为true 禁用
+            1.WebMvcConfigurer+@Bean
+    原理
+        1.执行doDispatch:通过handlerMappings找到对应handler
+        2.通过handler找到对应的handlerAdapter
+        handlerAdapter类型:
+            RequestHandlerMappingAdapter 支持方法上标注@RequestMapping
+            HandlerFunctionAdapter 支持函数式编程
+            HttpRequestHandlerAdapter
+            SimpleControllerHandlerAdapter
+        3.执行目标方法
+             ha.handle(processedRequest, response, mappedHandler.getHandler());
+                invokeHandlerMethod(request, response, handlerMethod); 执行目标方法
+                   invocableMethod.invokeAndHandle(webRequest, mavContainer);
+                        Object returnValue = invokeForRequest(webRequest, mavContainer, providedArgs);
+                            Object[] args = this.getMethodArgumentValues(request, mavContainer, providedArgs);
+                                接4
+
+                参数解析器列表 argumentResolvers
+                参数解析器对象   HandlerMethodArgumentResolver 各种解析器由此扩展
+                    解析器内部  1.判断是否解析这种参数
+                               2.支持就调用resolveArgument
+                返回值处理器列表 returnValueHandlers 各种返回值处理器由此扩展
+                真正执行目标方法 invokeForRequest(webRequest, mavContainer, providedArgs);
+                    getMethodArgumentValues(request, mavContainer, providedArgs); 获取方法参数值
+                        getArgumentResolver 遍历所有解析器判断是否支持
+        4.解析参数值
+            resolver.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
+                Object arg = resolveName(resolvedName.toString(), nestedParameter, webRequest);
+        5.解析servlet API
+            request:由ServletRequestMethodArgumentResolver 解析
+        6.解析model,map等对象
+             model: resolver.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
+                   ModelAndViewContainer   mavContainer.getModel();
+                   private final ModelMap defaultModel = new BindingAwareModelMap();
+扩展
+
+    如果一个有参构造器，所有有参构造器的参数的值都从容器中确定

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <bean id="user" class="SpringIOCDemo.User">
+        <!--set注入-->
+<!--        <property name="id" value="001"></property>-->
+<!--        <property name="name" value="张三"></property>-->
+        <!--有参构造器注入-->
+<!--        <constructor-arg name="id" value="001"></constructor-arg>-->
+<!--        <constructor-arg name="name" value="张三"></constructor-arg>-->
+        <!--设置空值-->
+<!--        <property name="address">-->
+<!--            <null></null>-->
+<!--        </property>-->
+        <!--设置特殊符号-->
+<!--        <property name="address" >-->
+<!--            <value><![CDATA[<<南京>>]]></value>-->
+<!--        </property>-->
+        <!--联级赋值-->
+        <property name="id" value="001"></property>
+        <property name="name" value="张三"></property>
+        <property name="dept" ref="dept"></property>
+    </bean>
+
+    <bean id="dept" class="SpringIOCDemo.Dept">
+        <property name="id" value="0101"></property>
+        <property name="name" value="后勤部"></property>
+        <property name="email" value="163.com"></property>
+    </bean>
+    <!--userDao对象创建-->
+    <bean name="userDao" class="SpringIOCDemo.UserDaoImpl"></bean>
+    <!--userService对象创建-->
+    <bean name="userService" class="SpringIOCDemo.UserServiceImpl" >
+        <!--注入userDao对象-->
+        <property name="userDao" ref="userDao"></property>
+    </bean>
+
+
+</beans>

@@ -1,0 +1,19 @@
+1.流概述
+    1.流方向
+    Output 程序(内存)->存储介质(硬盘) 输出流
+    Intput 存储介质(硬盘)->程序(内存) 输入流
+    2.流分类
+          输入流       输出流             缓存流输入流   提高速度(存在缓冲区)  缓存流输出流    转换流
+    字节流 InputStream OutputStream      BufferedInputStream     BufferedOutputStream  InputStreamReader
+    字符流 Reader      Writer            BufferedReader          BufferedWriter        OutputStreamWriter
+                                        readerLine(); 读一行                          解码:字节数组、字节->字符数据，字符串
+                                                                                     编码:字符数据，字符串->字节数组、字节
+2.对象的序列化机制
+    将Java中的对象转换为与平台无关的二进制流，从而永久保存在硬盘中,或通过网络传输到另一个网络节点，通过程序获得该二进制流转为对象.
+3.static 和transient 修饰的变量不能序列化
+4.RandomAccessFile直接继承与Object类,实现了两个接口DataInput，DataOutput
+    1.mode:
+        r:只读打开
+        rw:可读可写
+        rwd:可读可写,同步更新文件内容
+        rws:可读可写,同步更新内容和元数据

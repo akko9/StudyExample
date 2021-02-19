@@ -1,0 +1,5 @@
+# Project exclude paths
+/Data-Structure/target/
+/JvmExample/target/
+/out/
+/SpringDemo/target/

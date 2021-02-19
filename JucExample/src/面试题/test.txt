@@ -1,0 +1,69 @@
+补充:
+    1.进程/线程
+    2.并发/并行
+    3.main线程:一切程序的入口
+    4.线程状态:
+        new Runnable blocked waiting time_waiting terminated
+    5.多线程的判断不能用if, 防止出现虚假唤醒
+1.synchronized与lock的区别？
+    1.原始构成：synchronized属于JVM层面，lock是javaApi层面。
+               synchronized 编译时 通过monitor来监控的,lock  new
+    2.使用方法：synchronized无需主动释放锁,lock需要手动释放，否则会出现死锁
+    3.等待是否可中断:synchronized不可中断，除非抛出异常或正常运行结束
+                   lock可中断，设置超时方法trylock
+                              lockInterrupt放入代码块,调用interrupt()可中断。
+    4.加锁是否公平:synchronized,lock默认都是非公平锁。lock:true为公平锁，false为非公平锁
+    5.锁定多个条件condition:synchronized没有,Reentrantlock可以精确唤醒。
+2.获得线程的方式？
+    1.Runnable接口 2.继承Thread 3.Callable接口
+    区别：1.Runnable 没有返回值,Callable 有返回值
+         2.Runnable 不抛出异常,Callable 抛出异常
+         3.接口实现方法：run(),call()
+         4.通过线程池
+3.线程池的优势？
+    ThreadPoolExecutor
+    线程复用，控制最大并发数，管理线程
+    1.降低资源消耗
+    2.提高响应速度
+    3.提高线程的可管理性
+4.线程池参数？
+    int corePoolSize,线程池中的常驻核心线程数，当线程数达到corePoolSize，则将任务放入缓存队列中
+    int maximumPoolSize,线程池能容纳同时指向的最大线程数
+    long keepAliveTime,多余空闲线程的存活时间
+    TimeUnit unit, keepAliveTime的单位
+    BlockingQueue<Runnable> workQueue, 阻塞队列，已经提交但为执行的任务
+    ThreadFactory threadFactory,线程工厂
+    RejectedExecutionHandler handler 拒绝策略
+5.线程池工作流程？
+    1.提交任务到线程池
+    2.如果corePoolSize>当前线程数,正常执行;corePoolSize<当前线程数,将任务放入阻塞队列workQueue
+    3.如果workQueue未满,正常执行;如果workQueue已满,当前执行线程数小于maximumPoolSize,则创建非核心线程开始执行任务
+    4.如果workQueue已满并且当前执行线程数大于maximumPoolSize,开启线程池的拒绝策略RejectExecutionHandler
+    5.当一个线程完成任务后,从队列中取出任务执行
+    6.当线程无任务的time超过KeepAliveTime,线程池判断,当前运行的线程大于corePoolSize，则将该线程停止。
+      当完成所有任务后,运行的线程范围收缩到corePoolSize大小。
+6.jdk自带的四种拒绝策略
+    AbortPolicy:直接抛出RejectedExecutionException异常
+    CallerRunPolicy:不会抛出异常,不会丢弃任务,会将任务退回调用者
+    DiscardOldestPolicy:丢弃队列中等待时间最久的任务，然后将该任务加入队列,继续提交该任务。
+    DiscardPolicy:直接丢弃任务,不做任何处理,不抛出异常
+7.工作中不能使用默认的三种线程创建？
+    1.newFixedThreadPool和newSingleThreadExecutor的允许队列长度默认为Integer.MAX_VALUE
+    堆积大量请求，导致oom
+    2.newCachedThreadPool和newScheduledThreadPool允许创建线程数量为Integer.MAX_VALUE
+    堆积大量线程，导致oom
+8.线程池配置线程数？
+    CPU密集型:CPU核数+1
+    IO密集型:
+        1.CPU核数*2
+        2.CPU核数/1-阻塞系数  阻塞系数:0.8~0.9
+9.死锁现象?
+    两个或两个以上的进程在执行过程中,因争夺资源造成一种互相等待的现象。
+    工具:jps -l 定位进程号
+        jstack 进程号
+8.八锁现象
+    静态同步方法锁的是类class
+    普通同步方法锁的是对象this
+    同步方法块锁的是synchronized括号里的对象。
+9.集合不安全
+

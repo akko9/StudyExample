@@ -1,0 +1,43 @@
+补充:
+与运算符（&）:两个同时为1，结果为1，否则为0
+或运算（|）:参加运算的两个对象，一个为1，其值为1。
+异或运算符（^）:如果两个位为“异”（值不同），则该位结果为1，否则为0。
+1110     14        1111 15
+1000  8 1000       1000  8
+1001  9 1000       1001  9
+1.Lambda 函数式编程
+    拷贝小括号,写死右箭头,落地大括号
+    1.一个类有且只有一个接口方法   但可以加入static default
+    @FunctionalInterface jdk8隐式加入
+2.ArrayList 底层数据结构:Object数组
+            jdk7 initialCapacity默认10
+            jdk8 initialCapacity默认0,当存入值时,变成10
+            扩容: 原值0.5
+      ArrayList线程不安全
+        1.问题:ConcurrentModificationException
+        2.原因:线程抢占
+        3.解决方法:
+            1.vector
+            2.Collections.synchronizedList(list)
+            3.new CopyOnWriteArrayList<>() 读写分离的思想
+                public boolean add(E e) {
+                        final ReentrantLock lock = this.lock;
+                        lock.lock();
+                        try {
+                            Object[] elements = getArray();
+                            int len = elements.length;
+                            Object[] newElements = Arrays.copyOf(elements, len + 1);
+                            newElements[len] = e;
+                            setArray(newElements);
+                            return true;
+                        } finally {
+                            lock.unlock();
+                        }
+                }
+3.HashSet
+    线程不安全解决方法: 同ArrayList
+    底层数据结构:HashMap 值作为key,map.value为一个object类型的常量
+4.HashMap
+    线程不安全:new concurrentHashMap()
+    默认长度:16 负载因子:0.75  扩容:当存入到16*0.75=12时扩容 扩容量为map.size() 1倍(通过位运算向左位移1)
+    底层数据:1.8:数组+链表+红黑树
